@@ -2,19 +2,32 @@
 # Autor.........: Cristian Matias de Souza
 # Cargo/Nível...: Analista de Dados (N3)
 # Criado em.....: 19/08/2026 22:26
-# Versão........: 1.1
+# Alterado em...: 20/08/2026 08:30
+# Versão........: 1.3
 # -----------------------------------------------------------------------------
-# Descrição.....: Orquestrador da análise de pedidos.
-#                 Carrega -> agrega -> plota -> salva. É o único arquivo que
-#                 decide o que fazer com as figuras (exibir ou gravar).
+# Descrição.....: Orquestrador da análise de pedidos em modo arquivo.
+#                 Carrega -> agrega -> plota -> grava. É o único arquivo que
+#                 decide o destino das figuras; o que entra na entrega e em
+#                 que ordem é declarado no catálogo de src/relatorio.py.
+#                 Gera três coisas em Saida/: um HTML por gráfico, um PNG por
+#                 gráfico (para o README) e o relatorio.html consolidado — o
+#                 arquivo único que vai para o cliente, e o que é aberto no
+#                 navegador quando exibir=True.
+#                 Para a versão interativa com filtros, veja app.py.
+# Histórico.....: 1.0 - versão inicial (agrega e exibe no navegador).
+#                 1.1 - exportação de PNG via kaleido.
+#                 1.2 - relatório consolidado e catálogo em src/relatorio.py.
+#                 1.3 - exibir=True abre o consolidado (antes: uma aba por
+#                       gráfico).
 # Dependências..: pandas, plotly, kaleido (opcional, só para os PNG)
 # =============================================================================
 
+import webbrowser
 from pathlib import Path
 
 import pandas as pd
 
-from src import analise, graficos
+from src import analise, relatorio
 from src.carga import carregar_pedidos
 
 BASE = Path(__file__).parent
@@ -43,35 +56,28 @@ def salvar_png(fig, destino: Path) -> bool:
         return False
 
 
-def main(exibir: bool = False, gerar_png: bool = True) -> None:
+def main(exibir: bool = False,
+         gerar_png: bool = True,
+         cliente: str | None = None) -> None:
+    """Roda o pipeline inteiro e grava os artefatos em Saida/.
+
+    `exibir` abre o relatório consolidado no navegador ao final — uma aba com
+    o projeto todo, e não uma aba por gráfico como nas versões anteriores.
+    """
     df = carregar_pedidos()
     print(f'Pedidos carregados: {len(df)} linhas\n')
 
-    # Cada item liga uma agregação à figura correspondente e ao nome do arquivo.
-    relatorios = [
-        ('vendas_por_regiao',
-         analise.vendas_por_regiao(df),
-         graficos.grafico_vendas_por_regiao),
-        ('vendas_por_vendedor',
-         analise.vendas_por_vendedor(df),
-         graficos.grafico_vendas_por_vendedor),
-        ('vendas_por_mes',
-         analise.vendas_por_mes(df),
-         graficos.grafico_vendas_por_mes),
-        ('top_itens',
-         analise.top_itens(df),
-         graficos.grafico_top_itens),
-    ]
+    # O que entra na entrega é declarado uma vez em src/relatorio.py — aqui só
+    # se decide o destino de cada peça.
+    itens = relatorio.construir(df)
 
     SAIDA.mkdir(exist_ok=True)
     if gerar_png:
         SAIDA_IMG.mkdir(parents=True, exist_ok=True)
 
-    for nome, dados, construir_figura in relatorios:
+    for nome, dados, fig, _nota in itens:
         print(f'=== {nome} ===')
         print(dados, '\n')
-
-        fig = construir_figura(dados)
 
         # HTML interativo, com o plotly.js embutido: abre offline, sem servidor.
         destino_html = SAIDA / f'{nome}.html'
@@ -86,11 +92,25 @@ def main(exibir: bool = False, gerar_png: bool = True) -> None:
 
         print()
 
-        if exibir:
-            fig.show()
+    # Entregável para o cliente: um arquivo só, com os quatro gráficos, os
+    # números de cabeçalho e o plotly.js embutido uma única vez.
+    secoes = [(nome, fig, nota) for nome, _dados, fig, nota in itens]
+    destino_relatorio = SAIDA / 'relatorio.html'
+    destino_relatorio.write_text(
+        relatorio.montar_relatorio(secoes, analise.resumo(df), cliente=cliente),
+        encoding='utf-8',
+    )
+    print(f'relatório consolidado em {destino_relatorio.relative_to(BASE)}')
+
+    # Uma aba só, com o projeto inteiro: é o mesmo arquivo que vai para o
+    # cliente, então conferir aqui é conferir o que ele vai receber.
+    if exibir:
+        webbrowser.open(destino_relatorio.as_uri())
+        print('abrindo no navegador')
 
 
 if __name__ == '__main__':
-    # exibir=False  -> só grava os arquivos, sem abrir o navegador.
+    # exibir=False    -> só grava os arquivos, sem abrir o navegador.
     # gerar_png=False -> pula a exportação estática (execução mais rápida).
-    main(exibir=True, gerar_png=True)
+    # cliente='...'   -> escreve "Preparado para X" no cabeçalho do relatório.
+    main(exibir=True, gerar_png=True, cliente=None)

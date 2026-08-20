@@ -2,10 +2,13 @@
 # Autor.........: Cristian Matias de Souza
 # Cargo/Nível...: Analista de Dados (N3)
 # Criado em.....: 19/08/2026 22:26
-# Versão........: 1.0
+# Alterado em...: 20/08/2026 08:05
+# Versão........: 1.1
 # -----------------------------------------------------------------------------
 # Descrição.....: Camada de análise. Recebe o DataFrame de pedidos e devolve as
 #                 agregações. Nenhuma função aqui lê arquivo nem plota nada.
+# Histórico.....: 1.0 - as quatro agregações dos gráficos.
+#                 1.1 - resumo(): KPIs de cabeçalho do relatório e do painel.
 # Dependências..: pandas
 # =============================================================================
 
@@ -48,3 +51,22 @@ def top_itens(df: pd.DataFrame, n: int = 5) -> pd.DataFrame:
               .sort_values(ascending=False)
               .head(n)
               .reset_index())
+
+
+def resumo(df: pd.DataFrame) -> dict:
+    """Números de cabeçalho do relatório: os KPIs que abrem a leitura.
+
+    Devolve um dicionário simples (não um DataFrame) porque o destino é texto
+    em um cartão, não uma tabela nem um gráfico.
+    """
+    return {
+        'faturamento': df['Total'].sum(),
+        'pedidos': len(df),
+        'ticket_medio': df['Total'].mean() if len(df) else 0.0,
+        'unidades': int(df['Unidades'].sum()),
+        'inicio': df['DataPedido'].min(),
+        'fim': df['DataPedido'].max(),
+        # Região que mais faturou — o destaque qualitativo do período.
+        'regiao_lider': (df.groupby('Regiao')['Total'].sum().idxmax()
+                         if len(df) else '—'),
+    }
