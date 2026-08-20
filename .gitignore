@@ -1,0 +1,8 @@
+.venv/
+.idea/
+__pycache__/
+
+# Os HTML são pesados (plotly.js embutido, ~4,8 MB cada) e podem ser
+# regerados com `python main.py`. Só os PNG do README ficam versionados.
+Saida/*
+!Saida/img/
