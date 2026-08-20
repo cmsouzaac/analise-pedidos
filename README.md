@@ -62,7 +62,6 @@ Pedidos/
 │       └── top_itens.png
 ├── main.py
 ├── app.py
-├── MetodosPathlib.py
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -89,7 +88,6 @@ Pedidos/
 | `src/analise.py` | **Camada de análise.** Quatro funções puras que recebem o DataFrame e devolvem uma agregação: `vendas_por_regiao()`, `vendas_por_vendedor()`, `vendas_por_mes()` e `top_itens(n=5)`. Nenhuma delas lê arquivo nem desenha gráfico. |
 | `src/relatorio.py` | **Camada de entrega.** Duas coisas: o catálogo `RELATORIOS` — a fonte única sobre o que entra na entrega, em que ordem e com que texto de leitura — e `montar_relatorio()`, que junta os gráficos, os KPIs e o cabeçalho em uma página HTML autocontida. Devolve a string; quem grava é quem chamou. `construir(df)` roda o catálogo inteiro sobre qualquer recorte do DataFrame. |
 | `src/graficos.py` | **Camada de visualização.** Uma função por gráfico, cada uma recebendo um DataFrame já agregado e devolvendo uma `Figure` do Plotly. Define o template visual compartilhado (`pedidos`): paleta, tipografia, grade discreta e separadores no padrão brasileiro (vírgula decimal). Define também a geometria das barras — `ESPESSURA_BARRA` e `PASSO_CATEGORIA`, em pixels — de onde saem o `bargap` e a altura de cada figura. Helpers internos cuidam de rótulos de mês em português (`jun/16`) e valores curtos em reais (`R$ 24,5 mil`). |
-| `MetodosPathlib.py` | **Script de estudo, independente do pipeline.** Explora os métodos de `pathlib` (`exists`, `stem`, `suffix`, `stat`, `glob`, `with_name`, `with_suffix`, `mkdir`) aplicados ao dataset. Serve como material de referência e não é importado por nenhum outro módulo. |
 | `requirements.txt` | Dependências do projeto: `pandas`, `plotly`, `kaleido` e `dash`. |
 | `.gitignore` | Mantém fora do repositório o ambiente virtual (`.venv/`), configurações da IDE (`.idea/`), caches (`__pycache__/`) e os HTML gerados (`Saida/*`), abrindo exceção para os PNG do README (`!Saida/img/`). |
 
@@ -177,12 +175,6 @@ total). Três interruptores no final do `main.py` controlam o comportamento:
 A exportação de PNG depende do `kaleido`, que usa um Chrome headless. Se ele
 não estiver disponível na máquina, o `main.py` avisa no terminal e segue — os
 HTML, que são o resultado principal, são gerados do mesmo jeito.
-
-Para rodar o script de estudo de `pathlib`:
-
-```bash
-python MetodosPathlib.py
-```
 
 **Requisitos:** Python 3.10+ (o código usa a sintaxe `Path | None`).
 Desenvolvido em Python 3.14.
