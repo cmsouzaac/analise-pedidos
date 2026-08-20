@@ -88,7 +88,7 @@ Pedidos/
 | `src/carga.py` | **Camada de carga.** Função `carregar_pedidos()`: valida a existência do arquivo, lê o CSV, converte `DataPedido` para `datetime` e cria a coluna derivada `Total` (`Unidades × PrecoUnidade`). Aceita um caminho opcional, o que permite apontar para outro CSV (recorte, arquivo de teste) sem alterar o módulo. |
 | `src/analise.py` | **Camada de análise.** Quatro funções puras que recebem o DataFrame e devolvem uma agregação: `vendas_por_regiao()`, `vendas_por_vendedor()`, `vendas_por_mes()` e `top_itens(n=5)`. Nenhuma delas lê arquivo nem desenha gráfico. |
 | `src/relatorio.py` | **Camada de entrega.** Duas coisas: o catálogo `RELATORIOS` — a fonte única sobre o que entra na entrega, em que ordem e com que texto de leitura — e `montar_relatorio()`, que junta os gráficos, os KPIs e o cabeçalho em uma página HTML autocontida. Devolve a string; quem grava é quem chamou. `construir(df)` roda o catálogo inteiro sobre qualquer recorte do DataFrame. |
-| `src/graficos.py` | **Camada de visualização.** Uma função por gráfico, cada uma recebendo um DataFrame já agregado e devolvendo uma `Figure` do Plotly. Define o template visual compartilhado (`pedidos`): paleta, tipografia, grade discreta e separadores no padrão brasileiro (vírgula decimal). Helpers internos cuidam de rótulos de mês em português (`jun/16`) e valores curtos em reais (`R$ 24,5 mil`). |
+| `src/graficos.py` | **Camada de visualização.** Uma função por gráfico, cada uma recebendo um DataFrame já agregado e devolvendo uma `Figure` do Plotly. Define o template visual compartilhado (`pedidos`): paleta, tipografia, grade discreta e separadores no padrão brasileiro (vírgula decimal). Define também a geometria das barras — `ESPESSURA_BARRA` e `PASSO_CATEGORIA`, em pixels — de onde saem o `bargap` e a altura de cada figura. Helpers internos cuidam de rótulos de mês em português (`jun/16`) e valores curtos em reais (`R$ 24,5 mil`). |
 | `MetodosPathlib.py` | **Script de estudo, independente do pipeline.** Explora os métodos de `pathlib` (`exists`, `stem`, `suffix`, `stat`, `glob`, `with_name`, `with_suffix`, `mkdir`) aplicados ao dataset. Serve como material de referência e não é importado por nenhum outro módulo. |
 | `requirements.txt` | Dependências do projeto: `pandas`, `plotly`, `kaleido` e `dash`. |
 | `.gitignore` | Mantém fora do repositório o ambiente virtual (`.venv/`), configurações da IDE (`.idea/`), caches (`__pycache__/`) e os HTML gerados (`Saida/*`), abrindo exceção para os PNG do README (`!Saida/img/`). |
@@ -117,7 +117,7 @@ Pedidos/
 | Arquivo em `Saida/` | Gráfico | Leitura |
 |---|---|---|
 | `relatorio.html` | **Os quatro juntos** | O entregável: cabeçalho com o período, faturamento total em destaque, quatro KPIs de apoio e os gráficos com uma nota de leitura cada. |
-| `vendas_por_regiao.html` | Barras verticais | Faturamento por região, do maior para o menor. |
+| `vendas_por_regiao.html` | Barras horizontais | Faturamento por região, do maior para o menor. |
 | `vendas_por_vendedor.html` | Barras horizontais | Faturamento por vendedor; o hover mostra também a quantidade de pedidos. Nomes longos leem melhor deitados. |
 | `vendas_por_mes.html` | Linha com marcadores | Evolução mensal do faturamento, com crosshair unificado no eixo x. |
 | `top_itens.html` | Barras horizontais | Ranking dos itens que mais faturaram. |
@@ -230,6 +230,14 @@ autenticação antes de expor a URL.
 - **`plotly.js` embutido uma vez.** No relatório consolidado o bundle entra
   só na primeira figura (`include_plotlyjs` ligado apenas nela). É o que
   transforma 19 MB em 4,9 MB sem perder a leitura offline.
+- **Espessura de barra em pixels, não no olho.** O Plotly só aceita `bargap`
+  (a fração vazia de cada faixa), então a barra engorda sozinha quando há
+  poucas categorias. Fixando faixa (40px) e espessura (24px), o `bargap` vira
+  conta e a altura da figura passa a derivar da contagem de barras.
+- **Três gráficos de barra, todos deitados.** O de região era vertical, mas
+  com três categorias cada barra recebia uma faixa de ~270px e ficava fina no
+  meio do vazio. Na horizontal a faixa depende da altura, que o próprio
+  gráfico define — a mesma regra vale para os três, sem exceção.
 - **Sem legenda nos gráficos.** Todas as séries são únicas: o título já diz o
   que está sendo medido, e a legenda seria ruído.
 

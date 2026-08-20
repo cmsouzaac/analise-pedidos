@@ -47,8 +47,8 @@ RELATORIOS = [
     ('vendas_por_regiao',
      analise.vendas_por_regiao,
      graficos.grafico_vendas_por_regiao,
-     'Comparação direta entre as regiões atendidas. A altura da barra é o '
-     'faturamento acumulado em todo o período.'),
+     'Comparação direta entre as regiões atendidas. O comprimento da barra é '
+     'o faturamento acumulado em todo o período.'),
     ('vendas_por_vendedor',
      analise.vendas_por_vendedor,
      graficos.grafico_vendas_por_vendedor,
